@@ -1,0 +1,73 @@
+{% set name = "psycopg" %}
+{% set version = "3.2.9" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  - url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+    sha256: 2fbb46fcd17bc81f993f28c47f1ebea38d66ae97cc2dbc3cad73b37cefbff700
+  - url: https://github.com/psycopg/psycopg/archive/refs/tags/3.2.9.tar.gz
+    sha256: 2d32c406f1b8e628e0eafd8608b452872bd67576d9d269e25ffbcd4ebacae085
+    folder: gh_src
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  skip: true  # [py<38]
+
+requirements:
+  host:
+    - python
+    - setuptools >=49.2.0
+    - wheel >=0.37
+    - pip
+  run:
+    - python
+    - backports.zoneinfo >=0.2.0  # [py<39]
+    - typing-extensions >=4.6  # [py<313]
+    - tzdata # [win]
+    # import psycopg failed with: 
+    # ImportError: no pq wrapper available.
+    # https://github.com/psycopg/psycopg/blob/3.2.9/README.rst#hacking
+    - libpq
+  run_constrained:
+    # binary
+    - psycopg-binary =={{ version }}
+    # c
+    - psycopg-c =={{ version }}
+
+# NameError: name 'pool' is not defined
+# psycopg_pool needs:
+{% set ignore_tests = " --ignore=gh_src/tests/pool/test_pool_common.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=gh_src/tests/pool/test_pool_common_async.py" %}
+# MyPy needs, skipped doc tests:
+{% set ignore_tests = ignore_tests + " --ignore=gh_src/tests/crdb/test_typing.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=gh_src/tests/test_typing.py" %}
+
+test:
+  source_files:
+    - gh_src/tests
+  imports:
+    - psycopg
+  commands:
+    - pip check
+    - pytest -v -m "not slow" {{ ignore_tests }} gh_src/tests
+  requires:
+    - pip
+    - pytest
+
+about:
+  home: https://psycopg.org/psycopg3
+  summary: PostgreSQL database adapter for Python
+  license: LGPL-3.0
+  license_family: GPL
+  license_file: LICENSE.txt
+  description: Psycopg 3 is a modern implementation of a PostgreSQL adapter for Python.
+  doc_url: https://www.psycopg.org/psycopg3/docs
+  dev_url: https://github.com/psycopg/psycopg/tree/master/psycopg
+
+extra:
+  recipe-maintainers:
+    - snegireff
