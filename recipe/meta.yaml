@@ -28,7 +28,7 @@ requirements:
     - python
     - backports.zoneinfo >=0.2.0  # [py<39]
     - typing-extensions >=4.6  # [py<313]
-    - tzdata # [win]
+    - python-tzdata # [win]
     # import psycopg failed with: 
     # ImportError: no pq wrapper available.
     # https://github.com/psycopg/psycopg/blob/3.2.9/README.rst#hacking
