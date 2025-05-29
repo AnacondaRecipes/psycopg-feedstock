@@ -8,7 +8,7 @@ package:
 source:
   - url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
     sha256: 2fbb46fcd17bc81f993f28c47f1ebea38d66ae97cc2dbc3cad73b37cefbff700
-  - url: https://github.com/psycopg/psycopg/archive/refs/tags/3.2.9.tar.gz
+  - url: https://github.com/{{ name }}/{{ name }}/archive/refs/tags/{{ version }}.tar.gz
     sha256: 2d32c406f1b8e628e0eafd8608b452872bd67576d9d269e25ffbcd4ebacae085
     folder: gh_src
 
