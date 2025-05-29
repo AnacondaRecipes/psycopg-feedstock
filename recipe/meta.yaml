@@ -23,6 +23,7 @@ requirements:
     - setuptools >=49.2.0
     - wheel >=0.37
     - pip
+    - libpq {{ libpq }}
   run:
     - python
     - backports.zoneinfo >=0.2.0  # [py<39]
