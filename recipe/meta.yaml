@@ -27,7 +27,6 @@ outputs:
     requirements:
       build:
         - {{ compiler('c') }}
-        - cython >=3.0.0,<3.1.0
       host:
         - python
         - pip
@@ -42,8 +41,10 @@ outputs:
     test:
       commands:
         - pip check
+        - python -c "import psycopg.pq; assert psycopg.pq.__impl__ == 'c'"
       requires:
         - pip
+        - {{ pin_subpackage('psycopg', exact=True) }}
 
   - name: {{ name }}
     build:
@@ -103,3 +104,6 @@ about:
 extra:
   recipe-maintainers:
     - snegireff
+  skip-lints:
+    - wrong_output_script_key
+    - missing_imports_or_run_test_py
