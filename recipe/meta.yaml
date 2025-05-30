@@ -2,62 +2,93 @@
 {% set version = "3.2.9" %}
 
 package:
-  name: {{ name|lower }}
+  name: {{ name|lower }}-split
   version: {{ version }}
 
 source:
-  - url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-    sha256: 2fbb46fcd17bc81f993f28c47f1ebea38d66ae97cc2dbc3cad73b37cefbff700
-  - url: https://github.com/{{ name }}/{{ name }}/archive/refs/tags/{{ version }}.tar.gz
-    sha256: 2d32c406f1b8e628e0eafd8608b452872bd67576d9d269e25ffbcd4ebacae085
-    folder: gh_src
+  url: https://github.com/{{ name }}/{{ name }}/archive/refs/tags/{{ version }}.tar.gz
+  sha256: 2d32c406f1b8e628e0eafd8608b452872bd67576d9d269e25ffbcd4ebacae085
 
 build:
   number: 0
-  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   skip: true  # [py<38]
 
 requirements:
   host:
     - python
-    - setuptools >=49.2.0
-    - wheel >=0.37
-    - pip
-    - libpq {{ libpq }}
   run:
     - python
-    - backports.zoneinfo >=0.2.0  # [py<39]
-    - typing-extensions >=4.6  # [py<313]
-    - python-tzdata # [win]
-    # import psycopg failed with: 
-    # ImportError: no pq wrapper available.
-    # https://github.com/psycopg/psycopg/blob/3.2.9/README.rst#hacking
-    - libpq
-  run_constrained:
-    # binary
-    - psycopg-binary =={{ version }}
-    # c
-    - psycopg-c =={{ version }}
 
-# NameError: name 'pool' is not defined
-# psycopg_pool needs:
-{% set ignore_tests = " --ignore=gh_src/tests/pool/test_pool_common.py" %}
-{% set ignore_tests = ignore_tests + " --ignore=gh_src/tests/pool/test_pool_common_async.py" %}
-# MyPy needs, skipped doc tests:
-{% set ignore_tests = ignore_tests + " --ignore=gh_src/tests/crdb/test_typing.py" %}
-{% set ignore_tests = ignore_tests + " --ignore=gh_src/tests/test_typing.py" %}
+outputs:
+  - name: {{ name }}-c
+    build:
+      script: cd psycopg_c && {{ PYTHON }} -m pip install . -vv  --no-deps --no-build-isolation
+      skip: True  # [py<38]
+    requirements:
+      build:
+        - {{ compiler('c') }}
+        - cython >=3.0.0,<3.1.0
+      host:
+        - python
+        - pip
+        - cython >=3.0.0,<3.1.0
+        - setuptools >=49.2.0
+        - wheel >=0.37
+        - tomli >=2.0.1  # [py<311]
+        - libpq {{ libpq }}
+      run:
+        - python
+        - libpq
+    test:
+      commands:
+        - pip check
+      requires:
+        - pip
 
-test:
-  source_files:
-    - gh_src/tests
-  imports:
-    - psycopg
-  commands:
-    - pip check
-    - pytest -v -m "not slow" {{ ignore_tests }} gh_src/tests
-  requires:
-    - pip
-    - pytest
+  - name: {{ name }}
+    build:
+      script: cd psycopg && {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+      skip: True  # [py<38]
+    requirements:
+      host:
+        - python
+        - setuptools >=49.2.0
+        - wheel >=0.37
+        - pip
+        - libpq {{ libpq }}
+      run:
+        - python
+        - backports.zoneinfo >=0.2.0  # [py<39]
+        - typing-extensions >=4.6  # [py<313]
+        - python-tzdata # [win]
+        # import psycopg failed with:
+        # ImportError: no pq wrapper available.
+        # https://github.com/psycopg/psycopg/blob/3.2.9/README.rst#hacking
+        - libpq
+      run_constrained:
+        # binary
+        - psycopg-binary =={{ version }}
+        # c
+        - psycopg-c =={{ version }}
+
+    # NameError: name 'pool' is not defined
+    # psycopg_pool needs:
+    {% set ignore_tests = " --ignore=tests/pool/test_pool_common.py" %}
+    {% set ignore_tests = ignore_tests + " --ignore=tests/pool/test_pool_common_async.py" %}
+    # MyPy needs, skipped doc tests:
+    {% set ignore_tests = ignore_tests + " --ignore=tests/crdb/test_typing.py" %}
+    {% set ignore_tests = ignore_tests + " --ignore=tests/test_typing.py" %}
+    test:
+      source_files:
+        - tests
+      imports:
+        - psycopg
+      commands:
+        - pip check
+        - pytest -v -m "not slow" {{ ignore_tests }} tests
+      requires:
+        - pip
+        - pytest
 
 about:
   home: https://psycopg.org/psycopg3
