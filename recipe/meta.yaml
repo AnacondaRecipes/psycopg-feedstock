@@ -1,0 +1,109 @@
+{% set name = "psycopg" %}
+{% set version = "3.2.9" %}
+
+package:
+  name: {{ name|lower }}-split
+  version: {{ version }}
+
+source:
+  url: https://github.com/{{ name }}/{{ name }}/archive/refs/tags/{{ version }}.tar.gz
+  sha256: 2d32c406f1b8e628e0eafd8608b452872bd67576d9d269e25ffbcd4ebacae085
+
+build:
+  number: 0
+  skip: true  # [py<38]
+
+requirements:
+  host:
+    - python
+  run:
+    - python
+
+outputs:
+  - name: {{ name }}-c
+    build:
+      script: cd psycopg_c && {{ PYTHON }} -m pip install . -vv  --no-deps --no-build-isolation
+      skip: True  # [py<38]
+    requirements:
+      build:
+        - {{ compiler('c') }}
+      host:
+        - python
+        - pip
+        - cython >=3.0.0,<3.1.0
+        - setuptools >=49.2.0
+        - wheel >=0.37
+        - tomli >=2.0.1  # [py<311]
+        - libpq {{ libpq }}
+      run:
+        - python
+        - libpq
+    test:
+      commands:
+        - pip check
+        - python -c "import psycopg.pq; assert psycopg.pq.__impl__ == 'c'"
+      requires:
+        - pip
+        - {{ pin_subpackage('psycopg', exact=True) }}
+
+  - name: {{ name }}
+    build:
+      script: cd psycopg && {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+      skip: True  # [py<38]
+    requirements:
+      host:
+        - python
+        - setuptools >=49.2.0
+        - wheel >=0.37
+        - pip
+        - libpq {{ libpq }}
+      run:
+        - python
+        - backports.zoneinfo >=0.2.0  # [py<39]
+        - typing-extensions >=4.6  # [py<313]
+        - python-tzdata # [win]
+        # import psycopg failed with:
+        # ImportError: no pq wrapper available.
+        # https://github.com/psycopg/psycopg/blob/3.2.9/README.rst#hacking
+        - libpq
+      run_constrained:
+        # binary
+        - psycopg-binary =={{ version }}
+        # c
+        - psycopg-c =={{ version }}
+
+    # NameError: name 'pool' is not defined
+    # psycopg_pool needs:
+    {% set ignore_tests = " --ignore=tests/pool/test_pool_common.py" %}
+    {% set ignore_tests = ignore_tests + " --ignore=tests/pool/test_pool_common_async.py" %}
+    # MyPy needs, skipped doc tests:
+    {% set ignore_tests = ignore_tests + " --ignore=tests/crdb/test_typing.py" %}
+    {% set ignore_tests = ignore_tests + " --ignore=tests/test_typing.py" %}
+    test:
+      source_files:
+        - tests
+      imports:
+        - psycopg
+      commands:
+        - pip check
+        - pytest -v -m "not slow" {{ ignore_tests }} tests
+      requires:
+        - pip
+        - pytest
+
+about:
+  home: https://psycopg.org/psycopg3
+  summary: PostgreSQL database adapter for Python
+  license: LGPL-3.0
+  license_family: GPL
+  license_file: LICENSE.txt
+  description: Psycopg 3 is a modern implementation of a PostgreSQL adapter for Python.
+  doc_url: https://www.psycopg.org/psycopg3/docs
+  dev_url: https://github.com/psycopg/psycopg/tree/master/psycopg
+
+extra:
+  recipe-maintainers:
+    - snegireff
+  skip-lints:
+    - wrong_output_script_key
+    - missing_imports_or_run_test_py
