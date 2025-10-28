@@ -90,6 +90,7 @@ outputs:
       requires:
         - pip
         - pytest
+        - pytest-asyncio
 
 about:
   home: https://psycopg.org/psycopg3
