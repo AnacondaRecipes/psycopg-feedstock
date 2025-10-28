@@ -90,7 +90,7 @@ outputs:
       requires:
         - pip
         - pytest
-        - pytest-asyncio
+        - pytest-tornasync
 
 about:
   home: https://psycopg.org/psycopg3
