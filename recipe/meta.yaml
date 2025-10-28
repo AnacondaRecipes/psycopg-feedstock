@@ -10,7 +10,7 @@ source:
   sha256: 2d32c406f1b8e628e0eafd8608b452872bd67576d9d269e25ffbcd4ebacae085
 
 build:
-  number: 0
+  number: 1
   skip: true  # [py<38]
 
 requirements:
@@ -90,6 +90,7 @@ outputs:
       requires:
         - pip
         - pytest
+        - pytest-tornasync
 
 about:
   home: https://psycopg.org/psycopg3
