@@ -77,6 +77,8 @@ outputs:
     # psycopg_pool needs:
     {% set ignore_tests = " --ignore=tests/pool/test_pool_common.py" %}
     {% set ignore_tests = ignore_tests + " --ignore=tests/pool/test_pool_common_async.py" %}
+    {% set ignore_tests = ignore_tests + " --ignore=tests/test_waiting_async.py" %} # [win]
+
     test:
       source_files:
         - tests
