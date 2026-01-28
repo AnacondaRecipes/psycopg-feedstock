@@ -1,5 +1,5 @@
 {% set name = "psycopg" %}
-{% set version = "3.2.9" %}
+{% set version = "3.3.2" %}
 
 package:
   name: {{ name|lower }}-split
@@ -7,11 +7,11 @@ package:
 
 source:
   url: https://github.com/{{ name }}/{{ name }}/archive/refs/tags/{{ version }}.tar.gz
-  sha256: 2d32c406f1b8e628e0eafd8608b452872bd67576d9d269e25ffbcd4ebacae085
+  sha256: ca10f87344be1eadd81063d6a49b871d8a0ca779ccce8b8a2fc1acc4f4a0987a
 
 build:
-  number: 1
-  skip: true  # [py<38]
+  number: 0
+  skip: true  # [py<310]
 
 requirements:
   host:
@@ -23,15 +23,16 @@ outputs:
   - name: {{ name }}-c
     build:
       script: cd psycopg_c && {{ PYTHON }} -m pip install . -vv  --no-deps --no-build-isolation
-      skip: True  # [py<38]
+      skip: True  # [py<310]
     requirements:
       build:
         - {{ compiler('c') }}
+        - {{ stdlib('c') }}
       host:
         - python
         - pip
-        - cython >=3.0.0,<3.1.0
-        - setuptools >=49.2.0
+        - cython >=3.1.1
+        - setuptools >=80.3.1
         - wheel >=0.37
         - tomli >=2.0.1  # [py<311]
         - libpq {{ libpq }}
@@ -49,11 +50,11 @@ outputs:
   - name: {{ name }}
     build:
       script: cd psycopg && {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
-      skip: True  # [py<38]
+      skip: True  # [py<310]
     requirements:
       host:
         - python
-        - setuptools >=49.2.0
+        - setuptools >=80.3.1
         - wheel >=0.37
         - pip
         - libpq {{ libpq }}
@@ -76,9 +77,6 @@ outputs:
     # psycopg_pool needs:
     {% set ignore_tests = " --ignore=tests/pool/test_pool_common.py" %}
     {% set ignore_tests = ignore_tests + " --ignore=tests/pool/test_pool_common_async.py" %}
-    # MyPy needs, skipped doc tests:
-    {% set ignore_tests = ignore_tests + " --ignore=tests/crdb/test_typing.py" %}
-    {% set ignore_tests = ignore_tests + " --ignore=tests/test_typing.py" %}
     test:
       source_files:
         - tests
@@ -90,6 +88,7 @@ outputs:
       requires:
         - pip
         - pytest
+        - mypy
         - pytest-tornasync
 
 about:
