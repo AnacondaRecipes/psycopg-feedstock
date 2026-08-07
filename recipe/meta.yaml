@@ -10,7 +10,7 @@ source:
   sha256: ca10f87344be1eadd81063d6a49b871d8a0ca779ccce8b8a2fc1acc4f4a0987a
 
 build:
-  number: 0
+  number: 1
   skip: true  # [py<310]
 
 requirements:
@@ -35,7 +35,7 @@ outputs:
         - setuptools >=80.3.1
         - wheel >=0.37
         - tomli >=2.0.1  # [py<311]
-        - libpq {{ libpq }}
+        - libpq 18.4  # TODO: revert to placeholder / remove once set via conda_build_config.yaml
       run:
         - python
         - libpq
@@ -57,7 +57,7 @@ outputs:
         - setuptools >=80.3.1
         - wheel >=0.37
         - pip
-        - libpq {{ libpq }}
+        - libpq 18.4  # TODO: revert to placeholder / remove once set via conda_build_config.yaml
       run:
         - python
         - backports.zoneinfo >=0.2.0  # [py<39]
