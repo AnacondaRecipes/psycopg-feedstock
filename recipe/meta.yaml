@@ -1,5 +1,8 @@
 {% set name = "psycopg" %}
-{% set version = "3.3.2" %}
+{% set version = "3.3.5" %}
+{% set ignore_tests = " --ignore=tests/pool/test_pool_common.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/pool/test_pool_common_async.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_waiting_async.py" %}  # [win]
 
 package:
   name: {{ name|lower }}-split
@@ -7,10 +10,10 @@ package:
 
 source:
   url: https://github.com/{{ name }}/{{ name }}/archive/refs/tags/{{ version }}.tar.gz
-  sha256: ca10f87344be1eadd81063d6a49b871d8a0ca779ccce8b8a2fc1acc4f4a0987a
+  sha256: 7fcbf68e8f703a7dbf1a4ed9dec310e3c0ac202a469a8fed54a28cc0267352ed
 
 build:
-  number: 1
+  number: 0
   skip: true  # [py<310]
 
 requirements:
@@ -23,7 +26,7 @@ outputs:
   - name: {{ name }}-c
     build:
       script: cd psycopg_c && {{ PYTHON }} -m pip install . -vv  --no-deps --no-build-isolation
-      skip: True  # [py<310]
+      skip: true  # [py<310]
     requirements:
       build:
         - {{ compiler('c') }}
@@ -46,11 +49,10 @@ outputs:
       requires:
         - pip
         - {{ pin_subpackage('psycopg', exact=True) }}
-
   - name: {{ name }}
     build:
       script: cd psycopg && {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
-      skip: True  # [py<310]
+      skip: true  # [py<310]
     requirements:
       host:
         - python
@@ -62,7 +64,7 @@ outputs:
         - python
         - backports.zoneinfo >=0.2.0  # [py<39]
         - typing-extensions >=4.6  # [py<313]
-        - python-tzdata # [win]
+        - python-tzdata  # [win]
         # import psycopg failed with:
         # ImportError: no pq wrapper available.
         # https://github.com/psycopg/psycopg/blob/3.2.9/README.rst#hacking
@@ -72,13 +74,8 @@ outputs:
         - psycopg-binary =={{ version }}
         # c
         - psycopg-c =={{ version }}
-
     # NameError: name 'pool' is not defined
     # psycopg_pool needs:
-    {% set ignore_tests = " --ignore=tests/pool/test_pool_common.py" %}
-    {% set ignore_tests = ignore_tests + " --ignore=tests/pool/test_pool_common_async.py" %}
-    {% set ignore_tests = ignore_tests + " --ignore=tests/test_waiting_async.py" %} # [win]
-
     test:
       source_files:
         - tests
